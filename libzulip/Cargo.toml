@@ -1,0 +1,28 @@
+[package]
+name = "libzulip"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pisserror = "0.2.3"
+reqwest = { version = "0.12.7", default-features = false, features = [
+    "rustls-tls",
+    "http2",
+] }
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
+tokio = { version = "1.40.0", default-features = false, features = [
+    "macros",
+    "tracing",
+] }
+tracing = { version = "0.1.40", features = ["async-await"] }
+
+[dev-dependencies]
+tracing-subscriber = { version = "0.3.18", features = [
+    "tracing",
+    "env-filter",
+] }
+uuid = { version = "1.10.0", features = ["v4", "fast-rng"] }
+
+[build-dependencies]
+built = { version = "0.7.4", features = ["semver", "git2"] }

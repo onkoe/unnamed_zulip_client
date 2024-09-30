@@ -2,9 +2,11 @@ use std::collections::HashMap;
 
 use crate::{error::ZulipError, Client};
 
+pub mod history;
+
 impl Client {
-    #[tracing::instrument]
-    pub async fn send_message(&mut self, msg: &Message) -> Result<MessageResponse, ZulipError> {
+    #[tracing::instrument(skip(self))]
+    pub async fn send_message(&self, msg: &Message) -> Result<MessageResponse, ZulipError> {
         let url = self.api_url().join("messages").unwrap();
 
         // these constitute the msg we'll send

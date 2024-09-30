@@ -23,7 +23,7 @@ async fn main() {
         .init();
 
     // make the client
-    let client = Client::new(ClientConfig {
+    let mut client = Client::new(ClientConfig {
         user_agent: UserAgent::new("client_name", "version"),
         api_key: ApiKey::new(api_key),
         email,
@@ -31,10 +31,13 @@ async fn main() {
         messages: MessagesConfig {
             read_by_sender: true,
         },
-    });
+        server_settings_cache_interval: None,
+    })
+    .await
+    .unwrap();
 
     // grab the settings!
-    let resp = client.server_settings().await.unwrap();
+    let resp = client.server_settings_cache.get().await.unwrap();
     dbg!(resp);
 
     // and linkifiers...

@@ -1,4 +1,5 @@
 use reqwest::Url;
+use tempfile::{tempfile, NamedTempFile};
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
 
@@ -9,7 +10,7 @@ use libzulip::{
     Client,
 };
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() {
     // grab auth stuff from env
     let email = std::env::var("ZULIP_EMAIL").unwrap();
@@ -33,12 +34,21 @@ async fn main() {
         messages: MessagesConfig {
             read_by_sender: true,
         },
-    });
+        server_settings_cache_interval: None,
+    })
+    .await
+    .unwrap();
 
     // make a uuid to check both ends
     let uuid = Uuid::new_v4();
     tracing::info!("uuid is {uuid}!");
 
+    // ok now run things
+    message(&client, &uuid).await;
+    file_upload(&client, &uuid).await;
+}
+
+async fn message(client: &Client, uuid: &Uuid) {
     // try sending a message!
     let resp = client
         .send_message(&Message::Channel {
@@ -52,4 +62,48 @@ async fn main() {
         .unwrap();
 
     dbg!(resp);
+}
+
+#[tracing::instrument(skip_all)]
+async fn file_upload(client: &Client, uuid: &Uuid) {
+    // make a file and write stuff to it
+    let temp_file = NamedTempFile::new().unwrap();
+    tokio::fs::write(temp_file.path(), format!("uploaded file {uuid}"))
+        .await
+        .unwrap();
+
+    // attempt to upload it
+    let up_resp = client.upload_file(temp_file.path()).await.unwrap();
+    tracing::debug!("{up_resp:#?}");
+
+    // now download it!
+    let down_resp = client.download_file(&up_resp.url).await.unwrap();
+    tracing::debug!("{down_resp:#?}");
+
+    // read both files
+    let (local, downloaded) = futures::join! {
+        tokio::fs::read(temp_file.path()),
+        tokio::fs::read(down_resp),
+    };
+
+    let (local, downloaded) = { (local.expect("local"), downloaded.expect("downloaded")) };
+    assert_eq!(
+        local, downloaded,
+        "file before and after upload should be equal"
+    );
+
+    // put it in the chat
+    let resp = client
+        .send_message(&Message::Channel {
+            to: libzulip::messages::ChannelMessageTarget::Name("general".into()),
+            content: format!(
+                "file for uuid! {uuid}, {}",
+                client.api_url().join(&up_resp.url).unwrap()
+            ),
+            topic: "greetings".into(),
+            queue_id: "".into(),
+            local_id: "".into(),
+        })
+        .await
+        .unwrap();
 }

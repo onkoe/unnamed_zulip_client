@@ -1,14 +1,20 @@
+use std::{sync::Arc, time::Duration};
+
 use reqwest::Url;
+use tokio::sync::RwLock;
 
 use crate::build_info;
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug)]
 pub struct ClientConfig {
     // general stuff
     pub user_agent: UserAgent,
     pub email: String,
     pub api_key: ApiKey,
     pub server_address: Url,
+
+    /// when the cache hasn't been updated for >= this duration, it'll be refreshed
+    pub server_settings_cache_interval: Option<Arc<RwLock<Duration>>>,
 
     // ok now all the little configs for modules
     pub messages: MessagesConfig,

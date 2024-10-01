@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use crate::{error::ZulipError, Client};
+use crate::{
+    error::{MessageError, ZulipError},
+    Client,
+};
 
 impl Client {
     #[tracing::instrument(skip(self))]
@@ -39,12 +42,20 @@ impl Client {
             .await?
             .error_for_status()?;
 
+        let parsed_resp = serde_json::from_str::<MessageResponse>(&resp.text().await?)?;
+
+        if let Some(error_code) = parsed_resp.code {
+            return Err(MessageError::SendFailed {
+                content,
+                error_code,
+            }
+            .into());
+        }
+
         tracing::trace!("sent msg successfully!");
 
         // try to parse the reply out
-        Ok(serde_json::from_str::<MessageResponse>(
-            &resp.text().await?,
-        )?)
+        Ok(parsed_resp)
     }
 }
 

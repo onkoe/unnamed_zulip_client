@@ -33,6 +33,8 @@ pub enum FileError {
 
 #[derive(Clone, Debug, Error)]
 pub enum MessageError {
+    #[error("Failed to send the given message. content: `{content}`, err: {error_code}")]
+    SendFailed { content: String, error_code: String },
     #[error("Failed to delete the message with ID `{id}`. err: {error_code}")]
     DeletionFailed { id: u64, error_code: String },
     #[error(

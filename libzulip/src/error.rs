@@ -51,4 +51,6 @@ pub enum MessageError {
         emoji_name: String,
         error_code: String,
     },
+    #[error("Failed to fetch the message with ID `{msg_id}`. err: {error_code}")]
+    SingleMessageFetchFailed { msg_id: u64, error_code: String },
 }

@@ -48,20 +48,22 @@ async fn main() {
     tracing::info!("uuid is {uuid}!");
 
     // ok now run things
-    message(&client, &uuid).await;
+    send_message(&client, &uuid, "hello world!".into()).await;
     file_upload(&client, &uuid).await;
     edit_message(&client, &uuid).await;
     delete_message(&client, &uuid).await;
     add_emoji_reaction(&client, &uuid).await;
     remove_emoji_reaction(&client, &uuid).await;
+    fetch_message(&client, &uuid).await;
 }
 
-async fn message(client: &Client, uuid: &Uuid) -> u64 {
+#[tracing::instrument(skip_all)]
+async fn send_message(client: &Client, uuid: &Uuid, msg: String) -> u64 {
     // try sending a message!
     let resp = client
         .send_message(&Message::Channel {
             to: ChannelMessageTarget::Name("general".into()),
-            content: format!("hello world! {uuid}"),
+            content: format!("{msg} (`{uuid}`)"),
             topic: "greetings".into(),
             queue_id: "".into(),
             local_id: "".into(),
@@ -69,7 +71,7 @@ async fn message(client: &Client, uuid: &Uuid) -> u64 {
         .await
         .unwrap();
 
-    dbg!(&resp);
+    tracing::info!("all done! :D");
     resp.id
 }
 
@@ -115,11 +117,14 @@ async fn file_upload(client: &Client, uuid: &Uuid) {
         })
         .await
         .unwrap();
+
+    tracing::info!("assertions passed! :D");
 }
 
+#[tracing::instrument(skip_all)]
 async fn edit_message(client: &Client, uuid: &Uuid) {
     // let's send another message, then edit it
-    let msg_id = message(client, uuid).await;
+    let msg_id = send_message(client, uuid, "this message should be edited".into()).await;
 
     let edited_message = EditedMessage {
         message_id: msg_id,
@@ -131,6 +136,7 @@ async fn edit_message(client: &Client, uuid: &Uuid) {
     };
 
     client.edit_message(edited_message).await.unwrap();
+    tracing::info!("all done! :D");
 }
 
 #[tracing::instrument(skip_all)]
@@ -152,12 +158,13 @@ async fn delete_message(client: &Client, uuid: &Uuid) {
 
     client.delete_message(msg_id).await.unwrap();
     client.delete_message(msg_id).await.unwrap_err(); // we shouldn't be able to delete it twice!
+    tracing::info!("assertions passed! :D");
 }
 
 #[tracing::instrument(skip_all)]
 async fn add_emoji_reaction(client: &Client, uuid: &Uuid) {
     // send a message
-    let msg_id = message(client, uuid).await;
+    let msg_id = send_message(client, uuid, "this msg should have emoji reactions".into()).await;
 
     // add a reaction to that message
     client
@@ -171,12 +178,19 @@ async fn add_emoji_reaction(client: &Client, uuid: &Uuid) {
         )
         .await
         .unwrap();
+
+    tracing::info!("all done! :D");
 }
 
 #[tracing::instrument(skip_all)]
 async fn remove_emoji_reaction(client: &Client, uuid: &Uuid) {
     // send a message
-    let msg_id = message(client, uuid).await;
+    let msg_id = send_message(
+        client,
+        uuid,
+        "this msg should've had its emoji reaction removed!".into(),
+    )
+    .await;
     let selector = EmojiSelector {
         emoji_name: String::from("heart"),
         emoji_code: None,
@@ -194,4 +208,34 @@ async fn remove_emoji_reaction(client: &Client, uuid: &Uuid) {
         .remove_emoji_reaction(msg_id, selector)
         .await
         .unwrap();
+}
+
+#[tracing::instrument(skip_all)]
+async fn fetch_message(client: &Client, uuid: &Uuid) {
+    // send a message
+    const MSG_CONTENT: &str = "`fetch_message`.";
+    let msg_id = send_message(client, uuid, MSG_CONTENT.into()).await;
+
+    // add a reaction
+    const CRAB_EMOJI: &str = "crab";
+    client
+        .add_emoji_reaction(msg_id, EmojiSelector::new_from_name(CRAB_EMOJI))
+        .await
+        .unwrap();
+
+    // grab its info
+    let msg = client
+        .fetch_single_message(msg_id, false)
+        .await
+        .unwrap()
+        .message;
+
+    // check its contents and reaction
+    assert_eq!(msg.content, MSG_CONTENT);
+    assert_eq!(
+        msg.reactions.unwrap().first().unwrap().emoji_name,
+        CRAB_EMOJI
+    );
+
+    tracing::info!("assertions passed! :D");
 }

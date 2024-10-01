@@ -6,6 +6,7 @@ use crate::{config::ClientConfig, error::ZulipError};
 pub mod config;
 pub mod error;
 pub mod messages;
+pub mod narrow;
 pub mod organizations;
 
 pub mod build_info {

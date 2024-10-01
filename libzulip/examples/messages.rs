@@ -6,7 +6,10 @@ use uuid::Uuid;
 use libzulip::{
     build_info,
     config::{ApiKey, ClientConfig, MessagesConfig, UserAgent},
-    messages::{history::EditedMessage, Message},
+    messages::{
+        edit_message::EditedMessage,
+        send::{ChannelMessageTarget, Message},
+    },
     Client,
 };
 
@@ -54,7 +57,7 @@ async fn message(client: &Client, uuid: &Uuid) -> u64 {
     // try sending a message!
     let resp = client
         .send_message(&Message::Channel {
-            to: libzulip::messages::ChannelMessageTarget::Name("general".into()),
+            to: ChannelMessageTarget::Name("general".into()),
             content: format!("hello world! {uuid}"),
             topic: "greetings".into(),
             queue_id: "".into(),
@@ -98,7 +101,7 @@ async fn file_upload(client: &Client, uuid: &Uuid) {
     // put it in the chat
     let _resp = client
         .send_message(&Message::Channel {
-            to: libzulip::messages::ChannelMessageTarget::Name("general".into()),
+            to: ChannelMessageTarget::Name("general".into()),
             content: format!(
                 "file for uuid! {uuid}, {}",
                 client.api_url().join(&up_resp.url).unwrap()
@@ -134,7 +137,7 @@ async fn delete_message(client: &Client, uuid: &Uuid) {
     // send message, then we can del it
     let msg_id = client
         .send_message(&Message::Channel {
-            to: libzulip::messages::ChannelMessageTarget::Name("general".into()),
+            to: ChannelMessageTarget::Name("general".into()),
             content: format!("this should be deleted... {uuid}"),
             topic: "greetings".into(),
             queue_id: "".into(),

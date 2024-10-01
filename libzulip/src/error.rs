@@ -35,4 +35,20 @@ pub enum FileError {
 pub enum MessageError {
     #[error("Failed to delete the message with ID `{id}`. err: {error_code}")]
     DeletionFailed { id: u64, error_code: String },
+    #[error(
+        "Couldn't add an emoji reaction to message `{msg_id}` with emoji name `{emoji_name}`. err: {error_code}"
+    )]
+    AddEmojiFailed {
+        msg_id: u64,
+        emoji_name: String,
+        error_code: String,
+    },
+    #[error(
+        "Couldn't remove an emoji reaction to message `{msg_id}` with emoji name `{emoji_name}`. err: {error_code}"
+    )]
+    RemoveEmojiFailed {
+        msg_id: u64,
+        emoji_name: String,
+        error_code: String,
+    },
 }

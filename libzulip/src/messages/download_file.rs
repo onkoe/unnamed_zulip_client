@@ -8,10 +8,10 @@ use crate::{
 impl Client {
     /// Downloads a file to a temporary path, then returns the path.
     #[tracing::instrument(skip(self))]
-    pub async fn download_file<S: AsRef<str> + std::fmt::Debug>(
-        &self,
-        url: S,
-    ) -> Result<NamedTempFile, ZulipError> {
+    pub async fn download_file<S>(&self, url: S) -> Result<NamedTempFile, ZulipError>
+    where
+        S: AsRef<str> + std::fmt::Debug + Send,
+    {
         let url = self.api_url().join(url.as_ref())?;
         tracing::info!("downloading file... (url: {url}");
 

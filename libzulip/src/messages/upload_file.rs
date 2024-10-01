@@ -8,15 +8,15 @@ use crate::{
 impl Client {
     /// Attempts to upload a file to Zulip.
     #[tracing::instrument(skip(self))]
-    pub async fn upload_file<P: AsRef<Path> + std::fmt::Debug>(
-        &self,
-        path: P,
-    ) -> Result<UploadFileResponse, ZulipError> {
+    pub async fn upload_file<P>(&self, path: P) -> Result<UploadFileResponse, ZulipError>
+    where
+        P: AsRef<Path> + std::fmt::Debug + Send,
+    {
         let path = path.as_ref().to_path_buf();
         let path_str = path.display().to_string();
 
         let file_name = {
-            let p = path.to_path_buf();
+            let p = path.clone();
 
             p.file_name()
                 .ok_or(ZulipError::FileError(FileError::FileNameNotFound(
@@ -48,7 +48,7 @@ impl Client {
                 reqwest::multipart::Form::new()
                     .file(file_name, path.clone())
                     .await
-                    .map_err(move |_| FileError::AttachSerializeFailed(path_str.clone()))?,
+                    .map_err(move |_| FileError::AttachSerializeFailed(path_str))?,
             )
             .send()
             .await?

@@ -20,12 +20,12 @@ pub struct ClientConfig {
     pub messages: MessagesConfig,
 }
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub struct UserAgent {
     s: String,
 }
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub struct ApiKey {
     key: String,
 }
@@ -44,7 +44,7 @@ impl ApiKey {
     }
 
     pub fn set<S: AsRef<str>>(&mut self, key: S) {
-        self.key = key.as_ref().to_string()
+        self.key = key.as_ref().to_string();
     }
 }
 
@@ -71,7 +71,7 @@ impl UserAgent {
 // module configs
 //
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub struct MessagesConfig {
     pub read_by_sender: bool,
 }

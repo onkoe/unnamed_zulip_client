@@ -80,7 +80,7 @@ impl Client {
 }
 
 /// Use this to select which emoji to add.
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub struct EmojiSelector {
     /// The target emoji's human-readable name.
     pub emoji_name: String,
@@ -137,7 +137,8 @@ impl EmojiSelector {
 
 /// Indicates the type of emoji. Each emoji `reaction_type` has an independent
 /// namespace for values of `emoji_code`.
-#[derive(Clone, Debug, PartialEq, PartialOrd, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ReactionType {
     /// In this namespace, `emoji_code` will be a dash-separated hex encoding
     /// of the sequence of Unicode codepoints that define this emoji in the

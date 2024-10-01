@@ -49,7 +49,8 @@ impl Client {
 }
 
 /// The message being sent.
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Message {
     Direct {
         to: DirectMessageTarget,
@@ -130,14 +131,14 @@ impl Message {
 }
 
 /// The channel(s) a message will be sent to.
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, serde::Deserialize)]
 pub enum ChannelMessageTarget {
     Name(String),
     Id(u64),
 }
 
 /// The person(s) a message will be sent to.
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, serde::Deserialize)]
 pub enum DirectMessageTarget {
     Ids(Vec<u64>),
     Emails(Vec<String>),

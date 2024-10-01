@@ -45,3 +45,50 @@ tokio = { version = "1.40.0", default-features = false, features = [
 
 [build-dependencies]
 built = { version = "0.7.4", features = ["semver", "git2"] }
+
+[lints.clippy]
+clone_on_ref_ptr = "warn"
+derivable_impls = "warn"
+error_impl_error = "deny"
+cloned_instead_of_copied = "warn"
+default_trait_access = "warn"
+derive_partial_eq_without_eq = "warn"
+empty_line_after_doc_comments = "warn"
+empty_line_after_outer_attr = "warn"
+enum_glob_use = "deny"
+equatable_if_let = "warn"
+# exhaustive_enums = "warn"                # TODO: later
+# exhaustive_structs = "warn"              # TODO: later
+explicit_deref_methods = "warn"
+fn_params_excessive_bools = "deny"
+future_not_send = "deny"
+if_not_else = "warn"
+implicit_clone = "warn"
+imprecise_flops = "warn"
+inconsistent_struct_constructor = "warn"
+index_refutable_slice = "warn"
+inefficient_to_string = "warn"
+large_stack_arrays = "warn"
+large_stack_frames = "warn"
+large_types_passed_by_value = "warn"
+manual_assert = "warn"
+manual_let_else = "warn"
+# missing_const_for_fn = "warn" # TODO: add this again later
+multiple_crate_versions = "warn"
+or_fun_call = "deny"
+path_buf_push_overwrite = "deny"
+redundant_clone = "warn"
+redundant_else = "warn"
+# return_self_not_must_use = "warn" # TODO: add this later
+semicolon_if_nothing_returned = "deny"
+should_panic_without_expect = "deny"
+single_match_else = "warn"
+suspicious_operation_groupings = "warn"
+trait_duplication_in_bounds = "deny"
+type_repetition_in_bounds = "deny"
+unnested_or_patterns = "warn"
+# unused_async  = "warn" # TODO: later
+# use_self = "warn" # TODO: later
+verbose_bit_mask = "warn"
+wildcard_dependencies = "deny"
+wildcard_imports = "deny"

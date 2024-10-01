@@ -1,0 +1,3 @@
+enforced-import-renames = [
+    { path = "reqwest::Client", rename = "ReqwestClient" },
+]

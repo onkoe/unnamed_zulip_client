@@ -101,6 +101,21 @@ pub struct EmojiSelector {
 }
 
 impl EmojiSelector {
+    /// Creates a new `EmojiSelector` from just an emoji name. Often, clients
+    /// use exclusively the name for these, so this is good shorthand.
+    ///
+    /// See the type docs for more info.
+    pub fn new_from_name<S>(name: S) -> Self
+    where
+        S: AsRef<str> + std::fmt::Debug,
+    {
+        Self {
+            emoji_name: name.as_ref().into(),
+            emoji_code: None,
+            reaction_type: None,
+        }
+    }
+
     fn make_parameters(&self) -> HashMap<&str, String> {
         // urlencode the emoji name
         let emoji_name = urlencoding::encode(&self.emoji_name).to_string();

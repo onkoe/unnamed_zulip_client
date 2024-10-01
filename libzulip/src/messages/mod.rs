@@ -3,5 +3,6 @@
 pub mod delete_message;
 pub mod download_file; // note: this isn't an api call. it's here for sanity
 pub mod edit_message;
+pub mod emoji_reaction; // contains both add and remove calls
 pub mod send;
 pub mod upload_file;

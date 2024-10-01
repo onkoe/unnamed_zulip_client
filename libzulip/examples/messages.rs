@@ -8,6 +8,7 @@ use libzulip::{
     config::{ApiKey, ClientConfig, MessagesConfig, UserAgent},
     messages::{
         edit_message::EditedMessage,
+        emoji_reaction::EmojiSelector,
         send::{ChannelMessageTarget, Message},
     },
     Client,
@@ -51,6 +52,8 @@ async fn main() {
     file_upload(&client, &uuid).await;
     edit_message(&client, &uuid).await;
     delete_message(&client, &uuid).await;
+    add_emoji_reaction(&client, &uuid).await;
+    remove_emoji_reaction(&client, &uuid).await;
 }
 
 async fn message(client: &Client, uuid: &Uuid) -> u64 {
@@ -149,4 +152,46 @@ async fn delete_message(client: &Client, uuid: &Uuid) {
 
     client.delete_message(msg_id).await.unwrap();
     client.delete_message(msg_id).await.unwrap_err(); // we shouldn't be able to delete it twice!
+}
+
+#[tracing::instrument(skip_all)]
+async fn add_emoji_reaction(client: &Client, uuid: &Uuid) {
+    // send a message
+    let msg_id = message(client, uuid).await;
+
+    // add a reaction to that message
+    client
+        .add_emoji_reaction(
+            msg_id,
+            EmojiSelector {
+                emoji_name: String::from("grinning_face_with_smiling_eyes"),
+                emoji_code: None,
+                reaction_type: None,
+            },
+        )
+        .await
+        .unwrap();
+}
+
+#[tracing::instrument(skip_all)]
+async fn remove_emoji_reaction(client: &Client, uuid: &Uuid) {
+    // send a message
+    let msg_id = message(client, uuid).await;
+    let selector = EmojiSelector {
+        emoji_name: String::from("heart"),
+        emoji_code: None,
+        reaction_type: None,
+    };
+
+    // add a reaction to that message
+    client
+        .add_emoji_reaction(msg_id, selector.clone())
+        .await
+        .unwrap();
+
+    // uhh didn't mean to send a heart and it looks weird. better remove it
+    client
+        .remove_emoji_reaction(msg_id, selector)
+        .await
+        .unwrap();
 }

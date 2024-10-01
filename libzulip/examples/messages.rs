@@ -47,6 +47,7 @@ async fn main() {
     message(&client, &uuid).await;
     file_upload(&client, &uuid).await;
     edit_message(&client, &uuid).await;
+    delete_message(&client, &uuid).await;
 }
 
 async fn message(client: &Client, uuid: &Uuid) -> u64 {
@@ -124,4 +125,25 @@ async fn edit_message(client: &Client, uuid: &Uuid) {
     };
 
     client.edit_message(edited_message).await.unwrap();
+}
+
+#[tracing::instrument(skip_all)]
+async fn delete_message(client: &Client, uuid: &Uuid) {
+    tracing::info!("this check might break if you don't have admin perms in this server. so make sure u have them! :D");
+
+    // send message, then we can del it
+    let msg_id = client
+        .send_message(&Message::Channel {
+            to: libzulip::messages::ChannelMessageTarget::Name("general".into()),
+            content: format!("this should be deleted... {uuid}"),
+            topic: "greetings".into(),
+            queue_id: "".into(),
+            local_id: "".into(),
+        })
+        .await
+        .unwrap()
+        .id;
+
+    client.delete_message(msg_id).await.unwrap();
+    client.delete_message(msg_id).await.unwrap_err(); // we shouldn't be able to delete it twice!
 }

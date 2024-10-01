@@ -11,9 +11,11 @@ pub enum ZulipError {
     FileError(#[from] FileError),
     #[error("The given URL didn't parse correctly. err: {_0}")]
     UrlParseError(#[from] url::ParseError),
+    #[error("{_0}")]
+    MessageError(#[from] MessageError),
 }
 
-#[derive(Debug, Error)]
+#[derive(Clone, Debug, Error)]
 pub enum FileError {
     #[error("The given file was not found on disk. (path: `{_0}`)")]
     FileNotFound(String),
@@ -27,4 +29,10 @@ pub enum FileError {
     FileNameNotFound(String),
     #[error("Failed to attach file to request. (path: `{_0}`)")]
     AttachSerializeFailed(String),
+}
+
+#[derive(Clone, Debug, Error)]
+pub enum MessageError {
+    #[error("Failed to delete the message with ID `{id}`. err: {error_code}")]
+    DeletionFailed { id: u64, error_code: String },
 }

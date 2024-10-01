@@ -49,9 +49,7 @@ impl Client {
 
         // upload that mf
         let resp = self
-            .reqwest_client()
-            .post(url)
-            .basic_auth(self.conf.email.clone(), Some(self.conf.api_key.get()))
+            .auth(self.reqwest_client().post(url))
             .multipart(
                 reqwest::multipart::Form::new()
                     .file(file_name, path.clone())
@@ -81,9 +79,7 @@ impl Client {
         tracing::info!("downloading file... (url: {url}");
 
         let resp = self
-            .reqwest_client()
-            .get(url)
-            .basic_auth(self.conf.email.clone(), Some(self.conf.api_key.get()))
+            .auth(self.reqwest_client().get(url))
             .send()
             .await?
             .error_for_status()?;

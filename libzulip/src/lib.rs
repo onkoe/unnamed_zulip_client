@@ -1,5 +1,5 @@
 use organizations::ServerSettingsCache;
-use reqwest::{Client as ReqwestClient, Url};
+use reqwest::{Client as ReqwestClient, RequestBuilder, Url};
 
 use crate::{config::ClientConfig, error::ZulipError};
 
@@ -90,5 +90,13 @@ impl Client {
         tokio::task::spawn_blocking(ReqwestClient::new)
         .await
         .expect("there was something wrong with your system configuration. `reqwest` was unable to find the required TLS library, or no system configuration was available.")
+    }
+
+    /// Apply authentication to the created `RequestBuilder` using internal
+    /// mechanisms.
+    ///
+    /// Don't change this without thorough testing!
+    fn auth(&self, request_builder: RequestBuilder) -> RequestBuilder {
+        request_builder.basic_auth(self.conf.email.clone(), Some(self.conf.api_key.get()))
     }
 }

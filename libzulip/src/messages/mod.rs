@@ -35,9 +35,7 @@ impl Client {
 
         // post the request and grab its response
         let resp = self
-            .reqwest_client()
-            .post(url)
-            .basic_auth(self.conf.email.clone(), Some(self.conf.api_key.get()))
+            .auth(self.reqwest_client().post(url))
             .form(&parameters)
             .send()
             .await?

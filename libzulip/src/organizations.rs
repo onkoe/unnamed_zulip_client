@@ -17,9 +17,7 @@ impl Client {
         let url = self.api_url().join("realm/linkifiers").unwrap();
 
         let resp = self
-            .reqwest_client()
-            .get(url)
-            .basic_auth(self.conf.email.clone(), Some(self.conf.api_key.get()))
+            .auth(self.reqwest_client().get(url))
             .send()
             .await?
             .error_for_status()?;
@@ -58,7 +56,7 @@ impl ServerSettingsCache {
         api_url: &Url,
         refresh_interval: Option<Arc<RwLock<Duration>>>,
     ) -> Result<Self, ZulipError> {
-        let settings = Self::server_settings(&reqwest_client, &api_url).await?;
+        let settings = Self::server_settings(&reqwest_client, api_url).await?;
         let last_updated = Instant::now();
 
         // use the default if the user didn't provide one

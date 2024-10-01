@@ -1,12 +1,12 @@
 use reqwest::Url;
-use tempfile::{tempfile, NamedTempFile};
+use tempfile::NamedTempFile;
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
 
 use libzulip::{
     build_info,
     config::{ApiKey, ClientConfig, MessagesConfig, UserAgent},
-    messages::Message,
+    messages::{history::EditedMessage, Message},
     Client,
 };
 
@@ -26,7 +26,7 @@ async fn main() {
         .init();
 
     // make the client
-    let mut client = Client::new(ClientConfig {
+    let client = Client::new(ClientConfig {
         user_agent: UserAgent::new("client_name", "version"),
         api_key: ApiKey::new(api_key),
         email,
@@ -46,9 +46,10 @@ async fn main() {
     // ok now run things
     message(&client, &uuid).await;
     file_upload(&client, &uuid).await;
+    edit_message(&client, &uuid).await;
 }
 
-async fn message(client: &Client, uuid: &Uuid) {
+async fn message(client: &Client, uuid: &Uuid) -> u64 {
     // try sending a message!
     let resp = client
         .send_message(&Message::Channel {
@@ -61,7 +62,8 @@ async fn message(client: &Client, uuid: &Uuid) {
         .await
         .unwrap();
 
-    dbg!(resp);
+    dbg!(&resp);
+    resp.id
 }
 
 #[tracing::instrument(skip_all)]
@@ -93,7 +95,7 @@ async fn file_upload(client: &Client, uuid: &Uuid) {
     );
 
     // put it in the chat
-    let resp = client
+    let _resp = client
         .send_message(&Message::Channel {
             to: libzulip::messages::ChannelMessageTarget::Name("general".into()),
             content: format!(
@@ -106,4 +108,20 @@ async fn file_upload(client: &Client, uuid: &Uuid) {
         })
         .await
         .unwrap();
+}
+
+async fn edit_message(client: &Client, uuid: &Uuid) {
+    // let's send another message, then edit it
+    let msg_id = message(client, uuid).await;
+
+    let edited_message = EditedMessage {
+        message_id: msg_id,
+        topic: None,
+        send_notification_to_old_thread: Some(true),
+        send_notification_to_new_thread: Some(true),
+        content: Some(format!("edited baby! {uuid}")),
+        stream_id: None,
+    };
+
+    client.edit_message(edited_message).await.unwrap();
 }

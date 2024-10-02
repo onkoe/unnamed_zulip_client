@@ -5,6 +5,7 @@
 pub mod delete_message;
 pub mod edit_message;
 pub mod fetch_single_message;
+pub mod render_message;
 pub mod send_message;
 
 // media modules

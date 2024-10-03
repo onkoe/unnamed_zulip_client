@@ -9,9 +9,23 @@ use std::error::Error;
 ///
 /// you should also make it an `Option<ResponseError>` in the response type.
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord, serde::Deserialize)]
-pub(crate) struct ResponseError {
+pub struct ResponseError {
     code: String,
     msg: String,
+    ignored_parameters_unsupported: Option<Vec<String>>,
+}
+
+impl ResponseError {
+    /// Creates a `tracing::warn!` if any of the given parameters were ignored.
+    ///
+    /// Please run this function if you get this type, as it shows the user
+    /// more about what went wrong internally.
+    #[tracing::instrument]
+    pub(crate) fn warn_ignored(&self) {
+        if let Some(ignored) = &self.ignored_parameters_unsupported {
+            tracing::warn!("some given parameters were ignored! these are: {ignored:#?}");
+        }
+    }
 }
 
 impl std::fmt::Display for ResponseError {

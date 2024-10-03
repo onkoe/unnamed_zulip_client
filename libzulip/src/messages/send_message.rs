@@ -10,29 +10,8 @@ impl Client {
     pub async fn send_message(&self, msg: &Message) -> Result<MessageResponse, ZulipError> {
         let url = self.api_url().join("messages").unwrap();
 
-        // these constitute the msg we'll send
-        let mut parameters = HashMap::new();
-        parameters.insert("type", msg.typ());
-
-        // gather message info
-        let to = msg.to();
-        let content = msg.content();
-        let topic = msg.topic();
-        let queue_id = msg.queue_id();
-        let local_id = msg.local_id();
-
-        if let Some(place) = &to {
-            parameters.insert("to", place);
-        }
-
-        parameters.insert("content", &content);
-
-        if let Some(top) = &topic {
-            parameters.insert("topic", top);
-        }
-
-        parameters.insert("queue_id", &queue_id);
-        parameters.insert("local_id", &local_id);
+        // make the parameters
+        let parameters = msg.make_parameters();
 
         // post the request and grab its response
         let resp = self
@@ -85,6 +64,29 @@ pub enum Message {
 }
 
 impl Message {
+    /// Creates the parameters for this function for use
+    #[tracing::instrument]
+    fn make_parameters(&self) -> HashMap<&str, String> {
+        // gather message info (these are all required)
+        let mut parameters = HashMap::from([
+            ("local_id", self.local_id()),
+            ("queue_id", self.queue_id()),
+            ("content", self.content()),
+            ("type", self.typ().into()),
+        ]);
+
+        // grab the optionals and add them if we got em
+        if let Some(to) = self.to() {
+            parameters.insert("to", to);
+        }
+        if let Some(topic) = self.topic() {
+            parameters.insert("topic", topic);
+        }
+
+        // return our new list of parameters
+        parameters
+    }
+
     fn typ(&self) -> &'static str {
         match *self {
             Message::Direct { .. } => "direct",

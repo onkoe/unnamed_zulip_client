@@ -225,21 +225,20 @@ async fn fetch_message(client: &Client, uuid: &Uuid) {
         .unwrap();
 
     // grab its info
-    let _msg = client
+    let msg = client
         .fetch_single_message(msg_id, false)
         .await
         .unwrap()
         .message;
 
     // check its contents and reaction
-    // assert_eq!(msg.content, MSG_CONTENT);
-    // assert_eq!(
-    //     msg.reactions.unwrap().first().unwrap().emoji_name,
-    //     CRAB_EMOJI
-    // );
+    assert_eq!(msg.content, format!("{} (`{uuid}`)", MSG_CONTENT));
+    assert_eq!(
+        msg.reactions.unwrap().first().unwrap().emoji_name,
+        CRAB_EMOJI
+    );
 
     tracing::info!("assertions passed! :D");
-    tracing::warn!("note that the API endpoint for `fetch_message` seems to be broken - it always returns HTML.");
 }
 
 #[tracing::instrument(skip_all)]

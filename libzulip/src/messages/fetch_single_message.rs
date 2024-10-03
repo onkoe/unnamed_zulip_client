@@ -25,14 +25,19 @@ impl Client {
         msg_id: u64,
         apply_markdown: bool,
     ) -> Result<SingleMessageResponse, ZulipError> {
-        let url = self.api_url().join(format!("messages/{msg_id}").as_str())?;
-
-        let mut parameters = HashMap::new();
-        parameters.insert("apply_markdown", apply_markdown.to_string());
+        let url = self
+            .api_url()
+            .join(format!("messages/{msg_id}").as_str())?
+            .query_pairs_mut()
+            .append_pair(
+                "apply_markdown",
+                &serde_json::Value::Bool(apply_markdown).to_string(),
+            )
+            .finish()
+            .to_owned();
 
         let resp = self
             .auth(self.reqwest_client().get(url))
-            .form(&parameters)
             .send()
             .await?
             .error_for_status()?

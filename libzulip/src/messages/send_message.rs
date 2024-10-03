@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    error::{MessageError, ZulipError},
+    error::{MessageError, ResponseError, ZulipError},
     Client,
 };
 
@@ -19,14 +19,14 @@ impl Client {
             .form(&parameters)
             .send()
             .await?
-            .error_for_status()?;
+            .error_for_status()?
+            .json::<MessageResponse>()
+            .await?;
 
-        let parsed_resp = serde_json::from_str::<MessageResponse>(&resp.text().await?)?;
-
-        if let Some(error_code) = parsed_resp.code {
+        if let Some(error) = resp.error {
             return Err(MessageError::SendFailed {
-                content,
-                error_code,
+                content: msg.content(),
+                error: error.to_string(),
             }
             .into());
         }
@@ -34,7 +34,7 @@ impl Client {
         tracing::trace!("sent msg successfully!");
 
         // try to parse the reply out
-        Ok(parsed_resp)
+        Ok(resp)
     }
 }
 
@@ -163,9 +163,7 @@ pub struct MessageResponse {
     pub id: u64,
     pub automatic_new_visibility_policy: Option<u8>,
 
-    // undocumented optionals :p
-    pub result: Option<String>,
-    pub msg: Option<String>,
-    pub code: Option<String>,
+    #[serde(flatten)]
+    pub error: Option<ResponseError>,
     pub stream: Option<String>,
 }

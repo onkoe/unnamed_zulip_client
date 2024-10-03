@@ -69,32 +69,35 @@ pub enum FileError {
 /// Errors when performing messaging tasks.
 #[derive(Clone, Debug, Error)]
 pub enum MessageError {
-    #[error("Failed to send the given message. content: `{content}`, err: {error_code}")]
-    SendFailed { content: String, error_code: String },
+    #[error("Failed to send the given message. content: `{content}`. {error}")]
+    SendFailed { content: String, error: String },
 
-    #[error("Failed to delete the message with ID `{id}`. err: {error_code}")]
-    DeletionFailed { id: u64, error_code: String },
+    #[error("Failed to delete the message with ID `{id}`. {error}")]
+    DeletionFailed { id: u64, error: String },
 
     #[error(
-        "Couldn't add an emoji reaction to message `{msg_id}` with emoji name `{emoji_name}`. err: {error_code}"
+        "Couldn't add an emoji reaction to message `{msg_id}` with emoji name `{emoji_name}`. {error}"
     )]
     AddEmojiFailed {
         msg_id: u64,
         emoji_name: String,
-        error_code: String,
+        error: String,
     },
 
     #[error(
-        "Couldn't remove an emoji reaction to message `{msg_id}` with emoji name `{emoji_name}`. err: {error_code}"
+        "Couldn't remove an emoji reaction to message `{msg_id}` with emoji name `{emoji_name}`. {error}"
     )]
     RemoveEmojiFailed {
         msg_id: u64,
         emoji_name: String,
-        error_code: String,
+        error: String,
     },
 
-    #[error("Failed to fetch the message with ID `{msg_id}`. err: {error_code}")]
-    SingleMessageFetchFailed { msg_id: u64, error_code: String },
+    #[error("Failed to upload the given file. (path: {path}, {error})")]
+    FileUploadFailed { path: String, error: String },
+
+    #[error("Failed to fetch the message with ID `{msg_id}`. {error}")]
+    SingleMessageFetchFailed { msg_id: u64, error: String },
 
     #[error("The server failed to render the following message: `{content}`. {error}")]
     RenderMessageFailed { content: String, error: String },

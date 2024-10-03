@@ -1,5 +1,5 @@
 use crate::{
-    error::{MessageError, ZulipError},
+    error::{MessageError, ResponseError, ZulipError},
     Client,
 };
 
@@ -16,14 +16,15 @@ impl Client {
             .auth(self.reqwest_client().delete(url))
             .send()
             .await?
-            .error_for_status()?;
+            .error_for_status()?
+            .json::<DeletedMessageResponse>()
+            .await?;
 
-        let parsed_resp = serde_json::from_str::<DeletedMessageResponse>(&resp.text().await?)?;
-
-        if let Some(error_code) = parsed_resp.code {
+        if let Some(error) = resp.error {
+            error.warn_ignored();
             return Err(MessageError::DeletionFailed {
                 id: msg_id,
-                error_code,
+                error: error.to_string(),
             }
             .into());
         }
@@ -34,5 +35,6 @@ impl Client {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct DeletedMessageResponse {
-    pub code: Option<String>,
+    #[serde(flatten)]
+    pub error: Option<ResponseError>,
 }

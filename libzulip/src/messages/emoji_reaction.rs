@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    error::{MessageError, ZulipError},
+    error::{MessageError, ResponseError, ZulipError},
     Client,
 };
 
@@ -24,17 +24,17 @@ impl Client {
             .form(&parameters)
             .send()
             .await?
-            .error_for_status()?;
+            .error_for_status()?
+            .json::<EmojiReactionResponse>()
+            .await?;
 
         tracing::trace!("added emoji reaction successfully!");
 
-        let parsed_resp = serde_json::from_str::<EmojiReactionResponse>(&resp.text().await?)?;
-
-        if let Some(e) = parsed_resp.code {
+        if let Some(error) = resp.error {
             return Err(MessageError::AddEmojiFailed {
                 msg_id,
                 emoji_name: selector.emoji_name,
-                error_code: e,
+                error: error.to_string(),
             }
             .into());
         }
@@ -60,17 +60,18 @@ impl Client {
             .form(&parameters)
             .send()
             .await?
-            .error_for_status()?;
+            .error_for_status()?
+            .json::<EmojiReactionResponse>()
+            .await?;
 
         tracing::trace!("removed emoji reaction successfully!");
 
-        let parsed_resp = serde_json::from_str::<EmojiReactionResponse>(&resp.text().await?)?;
-
-        if let Some(e) = parsed_resp.code {
+        if let Some(error) = resp.error {
+            error.warn_ignored();
             return Err(MessageError::RemoveEmojiFailed {
                 msg_id,
                 emoji_name: selector.emoji_name,
-                error_code: e,
+                error: error.to_string(),
             }
             .into());
         }
@@ -164,5 +165,6 @@ impl std::fmt::Display for ReactionType {
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct EmojiReactionResponse {
-    pub code: Option<String>,
+    #[serde(flatten)]
+    pub error: Option<ResponseError>,
 }

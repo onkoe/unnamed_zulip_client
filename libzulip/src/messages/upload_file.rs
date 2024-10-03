@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::{
-    error::{FileError, ZulipError},
+    error::{FileError, MessageError, ResponseError, ZulipError},
     Client,
 };
 
@@ -52,15 +52,21 @@ impl Client {
             )
             .send()
             .await?
-            .error_for_status()?;
+            .error_for_status()?
+            .json::<UploadFileResponse>()
+            .await?;
+
+        if let Some(error) = resp.error {
+            error.warn_ignored();
+            return Err(MessageError::FileUploadFailed {
+                path: path.to_string_lossy().to_string(),
+                error: error.to_string(),
+            }
+            .into());
+        }
 
         tracing::trace!("uploaded file successfully!");
-
-        tracing::trace!("parsing reply...");
-        // try to parse the reply out
-        Ok(serde_json::from_str::<UploadFileResponse>(
-            &resp.text().await?,
-        )?)
+        Ok(resp)
     }
 }
 
@@ -69,4 +75,6 @@ impl Client {
 pub struct UploadFileResponse {
     pub url: String,
     pub filename: String,
+    #[serde(flatten)]
+    pub error: Option<ResponseError>,
 }
